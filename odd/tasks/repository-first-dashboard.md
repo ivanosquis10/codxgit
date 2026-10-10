@@ -1,0 +1,23 @@
+# Repository-first dashboard
+
+## Intent and accepted scope
+User approved repositories as the primary personal-work grouping, optional GitHub Projects secondary filtering, wider desktop layout and an actual shadcn sidebar. Keep the MVP weekly and chart-free; pnpm only.
+
+## Decisions
+- Derive repository choices from personal issue/PR/commit sources, never organization-wide Projects items. No-Project repositories must work.
+- Repository filter and optional Project filter intersect; empty filter means all personal repositories. Preserve clear attribution labels (issues current assignee, PR/commits author).
+- Repository table is primary. Project activity must not be inferred only from repository commits. Optional Project rows respect selected scope; GitHub Project options prioritize observed personal item involvement.
+- Shadcn responsive collapsible sidebar with real controls, no fake navigation. Remove max-w-6xl bottleneck; use all remaining width with compact sidebar and adaptive desktop width at least 80% main area where viewport permits, full mobile inset.
+- No auth changes, secret exposure, unrelated source edits or global installs. Preserve .atl/data. No commits requested; existing unborn master remains untouched. User explicitly excluded native code review for R3; no native review was run for that narrow adjustment. User explicitly excludes native code review for this narrow UI adjustment; still run functional/type/build checks.
+
+## Tasks
+- [x] R1 (done): Implement repository derivation/filtering/primary breakdown, correct Project relevance, add responsive shadcn sidebar and width, update tests/docs. Route: delegated single writer; multi-file trigger. Acceptance: no-Project repos visible, repository and Project intersection correct, no duplicate totals or commit-inflated Project activity, pnpm tests/typecheck/build pass.
+- [ ] R2 (pending): Prior candidate verification follow-up; native review selection and visual/browser verification remain unavailable. Do not conflate this with the current small adjustment.
+- [x] R3 (done): Refined sidebar per user feedback: `collapsible="icon"`, 16rem desktop width, no sidebar scroll; long filter lists are in bounded dropdown overlays. Route: delegated focused UI writer. User explicitly excluded native code review for this adjustment. Acceptance observed: filter menus retain multi-select and All resets; sidebar content overflow hidden; main retains remaining width; pnpm checks pass.
+- [x] R4 (done): Independently verify refined sidebar. Route: delegated verifier. `pnpm test` 67/67; typecheck and build pass. Source readback confirmed provider variable, 16rem token, collapsible icon and overlay scroll containment. Browser visual/interaction check unavailable and not claimed.
+
+## Checks
+Test-first RED then GREEN for repository derivation/filter/Project relevance and URL params. Config/component installation uses structural checks rather than fabricated RED. Commands: pnpm test, pnpm typecheck, pnpm build, loopback HTTP smoke. Browser required when tools available; explicitly disclose if unavailable.
+
+## Evidence and next action
+Read-only explorer mapped exact src/lib/types.ts, summary.ts, query.ts, server dashboard functions/server, route, components and tests. Canonical shadcn sidebar docs consulted via Context7; use SidebarProvider/SidebarInset/SidebarTrigger and mobile sheet, Tailwind sidebar variables. Forecast ~400–700 authored lines plus canonical generated shadcn components; one coherent UI/filter unit, no PR delivery requested. Prior MVP native review is pending intended-untracked declaration, no lineage or approval exists. Writer observed RED 13 failed / 54 passed, then GREEN 67 tests / 6 files; pnpm typecheck/build and own loopback HTTP live/demo/filter smoke passed. Sidebar canonical components installed; no-Project demo repository correctly remains visible. Worker stopped only own server on 4174 and preserved existing 4173 listener. Browser visual checks unavailable to writer. Independent verifier also passed 67 tests, typecheck/build; own loopback smoke on 4175 verified repository-only and Project intersection rows, including empty intersection, with 200 and preserved params. Parent spot-checked route width and filter preservation. Browser tooling unavailable: no visual verification claimed. Native INSPECT blocked on intended-untracked selection; no START/lineage/approval. R2 (the earlier broader candidate's browser/native review follow-up) remains pending. R3's own server on 4191 stopped; 4173 untouched. No browser visual check. Commit evidence: pending explicit user request.

@@ -1,0 +1,9 @@
+# pnpm project settings (single-package workspace root).
+# Native build approvals are opt-in per package; there is no blanket approval.
+# - better-sqlite3 compiles/links a native binding when no prebuild is used.
+# - esbuild links its platform binary after install.
+allowBuilds:
+  better-sqlite3: true
+  esbuild: true
+minimumReleaseAgeExclude:
+  - '@vitejs/plugin-react@6.1.2'
