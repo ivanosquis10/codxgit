@@ -17,6 +17,7 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar'
 import { ProjectFilter } from '@/components/project-filter'
+import { BrandLogo } from '@/components/brand-logo'
 import { useI18n } from '@/i18n'
 import type { DashboardData } from '@/lib/types'
 
@@ -79,7 +80,7 @@ export function AppSidebar({
     <Sidebar collapsible="icon">
       <SidebarHeader>
         <div className="flex items-center gap-2 px-2 py-1.5 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
-          <GitBranch className="size-5 shrink-0" aria-hidden />
+          <BrandLogo className="size-5 shrink-0 text-foreground" />
           <div className="min-w-0 group-data-[collapsible=icon]:hidden">
             <div className="truncate text-sm font-semibold tracking-tight">CodxGit</div>
             <div className="text-sidebar-foreground/70 truncate text-xs">

@@ -21,7 +21,10 @@ export const Route = createRootRoute({
           'Local-first dashboard for personal GitHub work across repositories: issues, pull requests, commits and GitHub Projects.',
       },
     ],
-    links: [{ rel: 'stylesheet', href: appCss }],
+    links: [
+      { rel: 'stylesheet', href: appCss },
+      { rel: 'icon', href: '/favicon.svg', type: 'image/svg+xml' },
+    ],
   }),
   component: RootComponent,
 })
