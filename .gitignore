@@ -1,0 +1,41 @@
+# Dependencies
+node_modules/
+
+# Package manager state (pnpm is the only supported package manager)
+.pnpm-store/
+.pnpm-debug.log*
+
+# Build output
+.output/
+.vinxi/
+.tanstack/
+dist/
+.vite/
+
+# Local database and runtime state (never source control)
+.data/
+*.sqlite
+*.sqlite-journal
+*.sqlite-wal
+*.sqlite-shm
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Editor and OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Test and tooling caches
+coverage/
+*.tsbuildinfo
+
+.atl/
+.codegraph/
+.pi/
+
