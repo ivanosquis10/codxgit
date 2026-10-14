@@ -55,6 +55,7 @@ const merged = (
   url: string,
   mergedAt: string,
   repo = 'desarrollo-intelicorps/estelar-bi',
+  createdAt: string | null = null,
 ): RawMergedPull => ({
   id,
   number: 1,
@@ -62,6 +63,7 @@ const merged = (
   url,
   repo,
   mergedAt,
+  createdAt,
 })
 
 const openIssue = (
@@ -69,6 +71,7 @@ const openIssue = (
   repo: string,
   url: string,
   updatedAt = '2026-10-05T16:00:00Z',
+  labels: string[] = [],
 ): RawBacklogItem => ({
   id,
   kind: 'issue',
@@ -77,6 +80,7 @@ const openIssue = (
   url,
   repo,
   updatedAt,
+  labels,
 })
 
 const commit = (id: string, repo: string, committedAt: string): RawCommit => ({
@@ -112,6 +116,7 @@ function baseInput(overrides: Partial<PersonalWorkInput> = {}): PersonalWorkInpu
     demo: false,
     openIssues: ok([]),
     openPulls: ok([]),
+    blockedIssues: ok([]),
     closedIssues: ok([]),
     mergedPulls: ok([]),
     commits: ok([]),
@@ -233,6 +238,23 @@ describe('buildWeeklySummary', () => {
     expect(summary.projects.metric).not.toEqual({ status: 'ok', value: 0 })
     expect(summary.projects.active).toEqual([])
     expect(summary.projects.reason).toBe(reason)
+  })
+
+  it('calculates median PR lead time and keeps blocked issues separate', () => {
+    const summary = buildWeeklySummary(
+      baseInput({
+        mergedPulls: ok([
+          merged('p1', 'https://x/pull/1', '2026-10-05T04:00:00.000Z', 'o/r', '2026-10-04T04:00:00.000Z'),
+          merged('p2', 'https://x/pull/2', '2026-10-06T04:00:00.000Z', 'o/r', '2026-10-04T04:00:00.000Z'),
+          merged('p3', 'https://x/pull/3', '2026-10-07T04:00:00.000Z', 'o/r', '2026-10-04T04:00:00.000Z'),
+        ]),
+        blockedIssues: ok([openIssue('b1', 'o/r', 'https://x/issues/1', '2026-10-05T16:00:00Z', ['blocked'])]),
+      }),
+    )
+
+    expect(summary.medianPrLeadTimeMinutes).toEqual({ status: 'ok', value: 2880 })
+    expect(summary.blockedIssues.metric).toEqual({ status: 'ok', value: 1 })
+    expect(summary.cycleTime).toEqual({ status: 'unavailable', reason: expect.any(String) })
   })
 
   it('reports an unsynced week as not covered instead of zero', () => {

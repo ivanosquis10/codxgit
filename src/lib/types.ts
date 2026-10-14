@@ -23,16 +23,20 @@ export type Metric =
 export type DateRangePreset =
   | 'this-week'
   | 'last-week'
+  | 'last-7-days'
   | 'last-15-days'
   | 'last-30-days'
+  | 'last-90-days'
   | 'one-month'
 
 /** The presets in display order, used by the URL parser and the filter UI. */
 export const DATE_RANGE_PRESETS: readonly DateRangePreset[] = [
   'this-week',
   'last-week',
+  'last-7-days',
   'last-15-days',
   'last-30-days',
+  'last-90-days',
   'one-month',
 ]
 
@@ -43,8 +47,10 @@ export const DEFAULT_RANGE_PRESET: DateRangePreset = 'last-30-days'
 export const DATE_RANGE_PRESET_LABELS: Record<DateRangePreset, string> = {
   'this-week': 'This week',
   'last-week': 'Last week',
+  'last-7-days': 'Last 7 days',
   'last-15-days': 'Last 15 days',
   'last-30-days': 'Last 30 days',
+  'last-90-days': 'Last 90 days',
   'one-month': '1 month',
 }
 
@@ -89,6 +95,8 @@ export type RawBacklogItem = {
   url: string
   repo: string
   updatedAt: string | null
+  /** Labels are present when GitHub returns them; missing labels are not inferred. */
+  labels?: string[]
 }
 
 /** A closure observed inside the selected week. */
@@ -111,6 +119,8 @@ export type RawMergedPull = {
   url: string
   repo: string
   mergedAt: string
+  /** Optional because GitHub/API projections or historical fixtures may omit it. */
+  createdAt?: string | null
 }
 
 /** A commit observed inside the selected week. */
@@ -194,6 +204,8 @@ export type RepositoryBreakdown = {
   issuesOpen: number
   pullsOpen: number
   issuesClosedInWeek: number
+  /** Issues closed with GitHub's completed state reason. */
+  issuesCompletedInRange: number
   pullsMergedInWeek: number
   commits: Metric
   /** Personal weekly events: range closures + merges + authored commits, per repository. */
@@ -241,6 +253,7 @@ export type WeeklySummary = {
   demo: boolean
   backlogIssues: { metric: Metric; items: BacklogItem[] }
   backlogPulls: { metric: Metric; items: BacklogItem[] }
+  blockedIssues: { metric: Metric; items: BacklogItem[] }
   issuesClosed: {
     metric: Metric
     /** Closures GitHub reported with state reason `completed`. */
@@ -250,6 +263,9 @@ export type WeeklySummary = {
     items: ClosedIssue[]
   }
   pullsMerged: { metric: Metric; items: MergedPull[] }
+  medianPrLeadTimeMinutes: Metric
+  /** Reliable work-start events are not currently available in GitHub reads. */
+  cycleTime: Metric
   commits: { metric: Metric; items: CommitEntry[]; attribution: 'repository-derived' | 'unavailable' }
   /** Repository-first grouping; the primary breakdown in the UI. */
   repositories: RepositoryView
@@ -275,6 +291,7 @@ export type PersonalWorkInput = {
   demo: boolean
   openIssues: SourceResult<RawBacklogItem[]>
   openPulls: SourceResult<RawBacklogItem[]>
+  blockedIssues: SourceResult<RawBacklogItem[]>
   closedIssues: SourceResult<RawClosedIssue[]>
   mergedPulls: SourceResult<RawMergedPull[]>
   commits: SourceResult<RawCommit[]>

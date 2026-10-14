@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
-import { FolderKanban, GitBranch, GitCommitHorizontal, LayoutDashboard, ShieldCheck } from 'lucide-react'
+import { BarChart3, FolderKanban, GitBranch, GitCommitHorizontal, LayoutDashboard, ShieldCheck } from 'lucide-react'
 
 import {
   Sidebar,
@@ -21,10 +21,11 @@ import { BrandLogo } from '@/components/brand-logo'
 import { useI18n } from '@/i18n'
 import type { DashboardData } from '@/lib/types'
 
-type SectionKey = 'overview' | 'repositories' | 'projects' | 'work' | 'coverage'
+type SectionKey = 'overview' | 'analytics' | 'repositories' | 'projects' | 'work' | 'coverage'
 
 const SECTION_ICONS: Record<SectionKey, LucideIcon> = {
   overview: LayoutDashboard,
+  analytics: BarChart3,
   repositories: GitBranch,
   projects: FolderKanban,
   work: GitCommitHorizontal,
@@ -37,6 +38,7 @@ function SidebarNav() {
 
   const links: { href: string; label: string; icon: LucideIcon }[] = [
     { href: '#overview', label: t.nav.overview, icon: SECTION_ICONS.overview },
+    { href: '/analytics', label: t.nav.analytics, icon: SECTION_ICONS.analytics },
     { href: '#repositories', label: t.nav.repositories, icon: SECTION_ICONS.repositories },
     { href: '#projects', label: t.nav.projects, icon: SECTION_ICONS.projects },
     { href: '#work', label: t.nav.rangeWork, icon: SECTION_ICONS.work },

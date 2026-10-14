@@ -78,6 +78,40 @@ function repoAllowed(repo: string, filter: Set<string> | null): boolean {
   return filter === null || filter.has(repo.toLowerCase())
 }
 
+function hasExactBlockedLabel(item: RawBacklogItem): boolean {
+  return item.labels?.some((label) => label.toLowerCase() === 'blocked') ?? false
+}
+
+function medianPrLeadTimeMinutes(
+  pulls: MergedPull[],
+  source: SourceResult<RawMergedPull[]>,
+): Metric {
+  if (source.status !== 'ok') return metricFromSource(source, 0)
+
+  const durations = pulls
+    .map((pull) => {
+      const created = pull.createdAt ? Date.parse(pull.createdAt) : Number.NaN
+      const merged = Date.parse(pull.mergedAt)
+      if (Number.isNaN(created) || Number.isNaN(merged) || merged < created) return null
+      return (merged - created) / 60_000
+    })
+    .filter((value): value is number => value !== null)
+    .sort((a, b) => a - b)
+
+  if (durations.length === 0) {
+    return unavailableMetric(
+      pulls.length > 0
+        ? 'PR creation timestamps were unavailable or invalid for this range.'
+        : 'No merged pull requests were found in this range.',
+    )
+  }
+
+  const middle = Math.floor(durations.length / 2)
+  const median =
+    durations.length % 2 === 1 ? durations[middle] : (durations[middle - 1] + durations[middle]) / 2
+  return okMetric(Math.round(median))
+}
+
 /** Attach Project membership and narrow by both the Project and repository filters. */
 function scopeItems<T extends { url: string; repo: string }>(
   items: T[],
@@ -169,6 +203,8 @@ export function buildWeeklySummary(
     input.openIssues.status === 'ok' ? input.openIssues.data : []
   const backlogPullSource: RawBacklogItem[] =
     input.openPulls.status === 'ok' ? input.openPulls.data : []
+  const blockedIssueSource: RawBacklogItem[] =
+    input.blockedIssues.status === 'ok' ? input.blockedIssues.data : []
 
   // Repository choices come only from personal sources, never from
   // organization-wide Project items — plus the durable catalog, so a repository
@@ -235,8 +271,15 @@ export function buildWeeklySummary(
     projectFilter,
     repos,
   )
+  const blockedIssues: BacklogItem[] = scopeItems(
+    blockedIssueSource.filter(hasExactBlockedLabel),
+    projectIndex,
+    projectFilter,
+    repos,
+  )
   const closedIssues: ClosedIssue[] = scopeItems(closedInWeek, projectIndex, projectFilter, repos)
   const mergedPulls: MergedPull[] = scopeItems(mergedInWeek, projectIndex, projectFilter, repos)
+  const completedIssues = closedIssues.filter((issue) => issue.stateReason === 'COMPLETED')
   const commits: CommitEntry[] = uniqueByUrl(commitsInWeek)
     .map((commit) => {
       const projectNumbers = projectsReadable ? (repoIndex.get(commit.repo) ?? []) : []
@@ -261,12 +304,14 @@ export function buildWeeklySummary(
       const issuesOpen = countInRepo(backlogIssues, choice.repo)
       const pullsOpen = countInRepo(backlogPulls, choice.repo)
       const issuesClosedInWeek = countInRepo(closedIssues, choice.repo)
+      const issuesCompletedInRange = countInRepo(completedIssues, choice.repo)
       const pullsMergedInWeek = countInRepo(mergedPulls, choice.repo)
       return {
         repo: choice.repo,
         issuesOpen,
         pullsOpen,
         issuesClosedInWeek,
+        issuesCompletedInRange,
         pullsMergedInWeek,
         commits: metricFromSource(input.commits, commitCount),
         weeklyActivity: issuesClosedInWeek + pullsMergedInWeek + commitCount,
@@ -370,6 +415,7 @@ export function buildWeeklySummary(
   const coverage: SourceCoverage[] = [
     coverageRow('backlog-issues', 'Open issues (current backlog)', input.openIssues, input.fetchedAt),
     coverageRow('backlog-pulls', 'Open pull requests (current backlog)', input.openPulls, input.fetchedAt),
+    coverageRow('blocked-issues', 'Open issues with the blocked label', input.blockedIssues, input.fetchedAt),
     coverageRow('closed-issues', 'Issues closed in range', input.closedIssues, input.fetchedAt),
     coverageRow('merged-pulls', 'Pull requests merged in range', input.mergedPulls, input.fetchedAt),
     coverageRow('commits', 'Commits authored in range (default branch)', input.commits, input.fetchedAt),
@@ -390,6 +436,10 @@ export function buildWeeklySummary(
       metric: metricFromSource(input.openPulls, backlogPulls.length),
       items: backlogPulls,
     },
+    blockedIssues: {
+      metric: metricFromSource(input.blockedIssues, blockedIssues.length),
+      items: blockedIssues,
+    },
     issuesClosed: {
       metric: metricFromSource(input.closedIssues, closedIssues.length),
       completed: metricFromSource(input.closedIssues, completedCount),
@@ -400,6 +450,8 @@ export function buildWeeklySummary(
       metric: metricFromSource(input.mergedPulls, mergedPulls.length),
       items: mergedPulls,
     },
+    medianPrLeadTimeMinutes: medianPrLeadTimeMinutes(mergedPulls, input.mergedPulls),
+    cycleTime: unavailableMetric('Reliable work-start events are not available.'),
     commits: {
       metric: metricFromSource(input.commits, commits.length),
       items: commits,

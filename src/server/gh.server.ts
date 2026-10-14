@@ -39,7 +39,7 @@ const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
 
 /** Minimal projection: never request issue or pull request bodies. */
 const SEARCH_JQ =
-  '{total:(.total_count // 0), incomplete:(.incomplete_results // false), items:[.items[]|{id:(.id|tostring), number:.number, title:(.title // ""), url:(.html_url // ""), repo:(.repository_url // ""), updatedAt:(.updated_at // null), closedAt:(.closed_at // null), stateReason:(.state_reason // null), mergedAt:(.pull_request.merged_at // null)}]}'
+  '{total:(.total_count // 0), incomplete:(.incomplete_results // false), items:[.items[]|{id:(.id|tostring), number:.number, title:(.title // ""), url:(.html_url // ""), repo:(.repository_url // ""), updatedAt:(.updated_at // null), createdAt:(.created_at // null), closedAt:(.closed_at // null), stateReason:(.state_reason // null), mergedAt:(.pull_request.merged_at // null), labels:([.labels[]?.name] | map(select(type == "string")))}]}'
 
 /** Minimal projection for Project items: identity, url and assignees only. */
 const PROJECT_ITEMS_JQ =
@@ -274,6 +274,12 @@ function repoFromApiUrl(url: string): string {
   return match ? match[1] : url
 }
 
+function normalizeLabels(labels: unknown): string[] | undefined {
+  if (!Array.isArray(labels)) return undefined
+  const normalized = labels.filter((label): label is string => typeof label === 'string')
+  return normalized.length > 0 ? normalized : []
+}
+
 export function normalizeStateReason(value: unknown): RawClosedIssue['stateReason'] {
   if (typeof value !== 'string') return 'OTHER'
   const normalized = value.toUpperCase()
@@ -292,9 +298,11 @@ type SearchItem = {
   url: string
   repo: string
   updatedAt: string | null
+  createdAt: string | null
   closedAt: string | null
   stateReason: string | null
   mergedAt: string | null
+  labels?: string[]
 }
 
 type SearchResponse = {
@@ -329,6 +337,11 @@ export type GhClient = {
     perPage: number,
   ): Promise<{ items: RawBacklogItem[]; incomplete: boolean }>
   searchOpenPulls(
+    login: string,
+    org: string,
+    perPage: number,
+  ): Promise<{ items: RawBacklogItem[]; incomplete: boolean }>
+  searchBlockedIssues(
     login: string,
     org: string,
     perPage: number,
@@ -458,6 +471,7 @@ export function createGhClient(exec: GhExec): GhClient {
           url: item.url,
           repo: repoFromApiUrl(item.repo),
           updatedAt: item.updatedAt,
+          ...(normalizeLabels(item.labels) ? { labels: normalizeLabels(item.labels) } : {}),
         })),
         incomplete: result.incomplete,
       }
@@ -477,7 +491,30 @@ export function createGhClient(exec: GhExec): GhClient {
           url: item.url,
           repo: repoFromApiUrl(item.repo),
           updatedAt: item.updatedAt,
+          ...(normalizeLabels(item.labels) ? { labels: normalizeLabels(item.labels) } : {}),
         })),
+        incomplete: result.incomplete,
+      }
+    },
+
+    async searchBlockedIssues(login, org, perPage) {
+      const result = await searchAll(
+        `assignee:${assertOwner(login)} org:${assertOwner(org)} is:issue state:open label:blocked`,
+        perPage,
+      )
+      return {
+        items: result.items
+          .filter((item) => item.labels?.some((label) => label.toLowerCase() === 'blocked'))
+          .map((item) => ({
+            id: item.id,
+            kind: 'issue' as const,
+            number: item.number,
+            title: item.title,
+            url: item.url,
+            repo: repoFromApiUrl(item.repo),
+            updatedAt: item.updatedAt,
+            labels: normalizeLabels(item.labels) ?? [],
+          })),
         incomplete: result.incomplete,
       }
     },
@@ -517,6 +554,7 @@ export function createGhClient(exec: GhExec): GhClient {
             title: item.title,
             url: item.url,
             repo: repoFromApiUrl(item.repo),
+            createdAt: item.createdAt,
             mergedAt: item.mergedAt as string,
           })),
         incomplete: result.incomplete,

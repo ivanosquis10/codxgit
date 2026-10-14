@@ -25,6 +25,7 @@ export const MAX_PROJECTS_FOR_ITEMS = 15
 export type BacklogPayload = {
   openIssues: SourceResult<RawBacklogItem[]>
   openPulls: SourceResult<RawBacklogItem[]>
+  blockedIssues: SourceResult<RawBacklogItem[]>
 }
 
 export type RangePayload = {
@@ -71,9 +72,12 @@ export async function syncBacklog(
   const openPulls = await readSource('Open pull requests', () =>
     client.searchOpenPulls(account, organization, GH_SEARCH_PER_PAGE),
   )
+  const blockedIssues = await readSource('Blocked issues', () =>
+    client.searchBlockedIssues(account, organization, GH_SEARCH_PER_PAGE),
+  )
 
-  const payload: BacklogPayload = { openIssues, openPulls }
-  const backlogSources: SourceResult<unknown>[] = [openIssues, openPulls]
+  const payload: BacklogPayload = { openIssues, openPulls, blockedIssues }
+  const backlogSources: SourceResult<unknown>[] = [openIssues, openPulls, blockedIssues]
   putSnapshot(db, {
     account,
     organization,
@@ -90,7 +94,7 @@ export async function syncBacklog(
   observeRepositories(db, {
     account,
     organization,
-    fullNames: collectRepos([openIssues, openPulls]),
+    fullNames: collectRepos([openIssues, openPulls, blockedIssues]),
     seenAt: fetchedAt,
   })
 

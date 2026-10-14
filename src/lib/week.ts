@@ -182,10 +182,14 @@ export function getRange(preset: DateRangePreset, anchor: Date, timeZone: string
       return weekRange(anchorDate, timeZone, preset)
     case 'last-week':
       return weekRange(shiftIsoDate(anchorDate, -DAYS_IN_WEEK), timeZone, preset)
+    case 'last-7-days':
+      return rangeFromDates(shiftIsoDate(anchorDate, -6), anchorDate, timeZone, preset)
     case 'last-15-days':
       return rangeFromDates(shiftIsoDate(anchorDate, -14), anchorDate, timeZone, preset)
     case 'last-30-days':
       return rangeFromDates(shiftIsoDate(anchorDate, -29), anchorDate, timeZone, preset)
+    case 'last-90-days':
+      return rangeFromDates(shiftIsoDate(anchorDate, -89), anchorDate, timeZone, preset)
     case 'one-month':
       return rangeFromDates(shiftMonthClamped(anchorDate, -1), anchorDate, timeZone, preset)
   }

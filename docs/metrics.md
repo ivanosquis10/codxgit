@@ -4,6 +4,13 @@ Every number in CodxGit has to survive one question: *which items produced it?* 
 
 ## Core definitions
 
+Engineering Analytics uses the following additional definitions:
+
+- **Throughput:** issues with GitHub's `state_reason: completed` observed inside the selected range. Not-planned closures are excluded.
+- **PR Lead Time:** elapsed time from `created_at` to `merged_at`; the dashboard displays the median of valid merged pull requests.
+- **Blocked Issue:** an open issue returned by GitHub's `label:blocked` search and carrying the exact `blocked` label. Historical blocked state is not reconstructed.
+- **Cycle Time:** unavailable until reliable work-start events are read; the dashboard does not infer a start from issue assignment, update time, or creation time.
+
 | Term | Definition | Careful note |
 |------|------------|--------------|
 | Completed | An item reached a terminal completed state inside the window | See the closure rules below |
@@ -93,3 +100,6 @@ These rules are the contract. The runnable MVP implements and unit-tests them; s
 - [ ] Multi-Project items never inflate totals.
 - [ ] Unknown, uncovered, and zero are semantically and visually different.
 - [ ] Every window states its timezone and its boundaries.
+- [ ] Median PR lead time excludes missing or invalid creation timestamps and renders unavailable when no reliable durations exist.
+- [ ] Blocked issues are current open issues with an exact `blocked` label, not historical blockers.
+- [ ] Cycle time is unavailable without a reliable work-start event.

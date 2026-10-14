@@ -6,11 +6,13 @@ where the deliberate limits are. It is written to match the code in `src/` and
 
 ## What is runnable
 
-A local TanStack Start application that renders one range-based dashboard:
+A local TanStack Start application that renders a range-based dashboard plus a
+standalone `/analytics` Engineering Analytics view:
 
-- A default **trailing 30-day** range plus **This week** / **Last week**
-  (Monday–Friday) and **Last 15 days** / **1 month** presets, all computed as local
-  calendar boundaries in one timezone with inclusive instants.
+- The dashboard supports **Last 7 days**, **Last 30 days** and **Last 90 days**
+  in addition to **This week** / **Last week** (Monday–Friday), **Last 15 days** /
+  **1 month** presets, all computed as local calendar boundaries in one timezone
+  with inclusive instants.
 - Personal scope only: issues currently assigned to you, pull requests you
   authored, and commits you authored.
 - Repository-first grouping: repository choices come from a durable local catalog built only from
@@ -21,6 +23,10 @@ A local TanStack Start application that renders one range-based dashboard:
   configured organization and pins the result. A repository stays selectable across ranges, and a
   missing range never deletes it.
 - Current open backlog reported separately from weekly closures and merges.
+- Engineering Analytics with completed issues, merged pull requests, median PR lead
+  time, exact-label blocked issues, repository breakdown, linked contributions and
+  a copyable Markdown report. Cycle time is explicitly unavailable without reliable
+  work-start events.
 - Optional, secondary Project breakdown, limited to Projects with observed
   personal involvement; repository commits never create a Project row.
 - A responsive shadcn sidebar (`SidebarProvider`/`SidebarInset`/`SidebarTrigger`,
@@ -42,13 +48,14 @@ no application login.
 | Path | Responsibility |
 |------|----------------|
 | `src/lib/week.ts` | Date-range presets (trailing 30/15, week, month lookback), local boundary resolution, inclusive instant checks, month-end clamping |
-| `src/lib/summary.ts` | Pure aggregation into the weekly view (repository-first grouping, dedup, filters, coverage) |
+| `src/lib/summary.ts` | Pure aggregation into the weekly and analytics views (repository-first grouping, dedup, filters, coverage, lead time) |
+| `src/lib/analytics.ts` | Pure Markdown report and lead-time formatting |
 | `src/lib/metrics.ts` | Metric constructors and source-to-metric mapping |
 | `src/lib/types.ts` | Shared client-safe types |
 | `src/lib/query.ts` | URL parameter parsing and serialization (`preset`, `week` anchor, `repos`, `projects`, `demo`) |
 | `src/lib/format.ts` | Number, timestamp and repository label formatting |
 | `src/lib/demo.ts` | Fixed, clearly labeled demo dataset |
-| `src/server/gh.server.ts` | `gh` adapter: fixed argv, bounds, typed errors |
+| `src/server/gh.server.ts` | `gh` adapter: fixed argv, bounds, typed errors, PR creation timestamps and exact blocked-label reads |
 | `src/server/sync.server.ts` | Source reads, coverage bookkeeping, snapshot writes |
 | `src/server/dashboard.server.ts` | Load-from-cache and explicit-refresh orchestration |
 | `src/server/dashboard.functions.ts` | `createServerFn` boundary used by the route |
@@ -58,6 +65,7 @@ no application login.
 | `src/db/snapshots.server.ts` | Snapshot upsert and read helpers |
 | `src/db/repositories.server.ts` | Repository catalog: observation upsert, account/org/name isolation, pin/unpin, validated manual add |
 | `src/routes/index.tsx` | Dashboard route, search params, sidebar shell, refresh handler |
+| `src/routes/analytics.tsx` | Engineering Analytics route reusing the dashboard loader and cache |
 | `src/components/app-sidebar.tsx` | shadcn sidebar shell and navigation |
 | `src/components/repository-breakdown.tsx` | Primary per-repository table/cards |
 | `src/components/repository-filter.tsx` | Repository selection from the durable catalog, pinned markers and the validated hand add |
@@ -124,6 +132,14 @@ no application login.
   personal set; an item or commit must satisfy both. Empty means all personal.
 - **Commits use the default-branch index.** `gh search commits` reads the
   default branch; the metric label says so.
+- **Analytics completion and merge counts stay distinct.** Completed issues use
+  `state_reason: completed`; merged PRs use `merged_at`; closed-unmerged PRs are
+  never mixed into either list.
+- **Lead time is conservative.** Only valid `created_at` → `merged_at` pairs are
+  included; missing fields produce an unavailable metric rather than a fabricated
+  duration.
+- **Blocked issues are current and explicit.** The source uses `label:blocked` and
+  exact returned label matching. It does not claim historical blocked coverage.
 - **Bounds are explicit.** Search reads paginate up to three pages of 100 and
   Project item reads use 100 items. A wider range such as the trailing 30 days
   can reach those caps, and hitting a bound marks the source `incomplete` with a
@@ -161,7 +177,8 @@ Deterministic tests (`pnpm test`) cover the areas that must not drift:
 
 | Area | File | Cases |
 |------|------|-------|
-| Week/range presets | `tests/week.test.ts` | trailing 30/15 inclusive local boundaries, week presets, month-end clamp (leap and non-leap), year crossing, timezone independence, DST transitions, inclusive instant checks |
+| Week/range presets | `tests/week.test.ts` | trailing 7/15/30/90 inclusive local boundaries, week presets, month-end clamp (leap and non-leap), year crossing, timezone independence, DST transitions, inclusive instant checks |
+| Engineering Analytics | `tests/analytics.test.ts`, `tests/summary.test.ts`, `tests/gh.test.ts` | exact blocked-label reads, median lead time, unavailable cycle time, linked Markdown report and lead-time formatting |
 | Aggregation | `tests/summary.test.ts` | dedup across Projects, filter union, not-planned separation, unavailable vs not-covered, week boundaries, repository-derived commit attribution, repository choices derivation, no-Project repository, repo filter, repo ∩ Project intersection, commit-only Project exclusion, Project rows respect both filters |
 | gh mapping | `tests/gh.test.ts` | fixed argv, input rejection, permission/missing/command classification, projection parsing, `gh repo view` argv and projection |
 | Snapshot cache | `tests/snapshots.test.ts` | idempotent upsert, account isolation, organization isolation, exact-window lookup, distinct ranges stay independent, identity upsert |

@@ -292,7 +292,7 @@ describe('createGhClient', () => {
     expect(result.items.map((item) => item.stateReason)).toEqual(['OTHER', 'REOPENED'])
   })
 
-  it('reads merged pull requests with merged_at, not closed_at', async () => {
+  it('reads merged pull requests with created_at and merged_at', async () => {
     const exec: GhExec = async () =>
       JSON.stringify({
         total: 1,
@@ -308,6 +308,7 @@ describe('createGhClient', () => {
             closedAt: '2026-10-05T18:12:25Z',
             stateReason: null,
             mergedAt: '2026-10-05T18:12:25Z',
+            createdAt: '2026-10-01T18:12:25Z',
           },
         ],
       })
@@ -318,8 +319,42 @@ describe('createGhClient', () => {
       number: 50,
       url: 'https://github.com/o/r/pull/50',
       repo: 'o/r',
+      createdAt: '2026-10-01T18:12:25Z',
       mergedAt: '2026-10-05T18:12:25Z',
     })
+  })
+
+  it('reads only open issues carrying the exact blocked label', async () => {
+    const exec: GhExec = vi.fn(async () =>
+      JSON.stringify({
+        total: 2,
+        incomplete: false,
+        items: [
+          {
+            id: 'blocked',
+            number: 8,
+            title: 'Blocked',
+            url: 'https://github.com/o/r/issues/8',
+            repo: 'https://api.github.com/repos/o/r',
+            updatedAt: null,
+            labels: ['blocked'],
+          },
+          {
+            id: 'other',
+            number: 9,
+            title: 'Not blocked',
+            url: 'https://github.com/o/r/issues/9',
+            repo: 'https://api.github.com/repos/o/r',
+            updatedAt: null,
+            labels: ['blocked-by-dependency'],
+          },
+        ],
+      }),
+    )
+
+    const result = await createGhClient(exec).searchBlockedIssues(LOGIN, ORG, 100)
+    expect(result.items.map((item) => item.id)).toEqual(['blocked'])
+    expect(exec).toHaveBeenCalledWith(expect.arrayContaining(['q=assignee:desarrollador1IR org:desarrollo-intelicorps is:issue state:open label:blocked']))
   })
 
   it('surfaces a permission error as a typed GhError', async () => {

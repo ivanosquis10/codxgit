@@ -70,6 +70,17 @@ describe('getRange rolling presets', () => {
     expect(range.endIso).toBe('2026-10-06T03:59:59.999Z')
   })
 
+  it('resolves the analytics 7-day and 90-day presets', () => {
+    expect(getRange('last-7-days', ANCHOR, CARACAS)).toMatchObject({
+      startDate: '2026-09-29',
+      endDate: '2026-10-05',
+    })
+    expect(getRange('last-90-days', ANCHOR, CARACAS)).toMatchObject({
+      startDate: '2026-07-08',
+      endDate: '2026-10-05',
+    })
+  })
+
   it('resolves this week and last week as Monday-Friday', () => {
     const thisWeek = getRange('this-week', ANCHOR, CARACAS)
     expect(thisWeek).toMatchObject({

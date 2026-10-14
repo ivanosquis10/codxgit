@@ -24,7 +24,7 @@ describe('range preset params', () => {
     for (const preset of DATE_RANGE_PRESETS) {
       expect(parseRangePreset(preset)).toBe(preset)
     }
-    expect(parseRangePreset('last-90-days')).toBeUndefined()
+    expect(parseRangePreset('last-180-days')).toBeUndefined()
     expect(parseRangePreset(undefined)).toBeUndefined()
     expect(parseRangePreset(30)).toBeUndefined()
     expect(DEFAULT_RANGE_PRESET).toBe('last-30-days')

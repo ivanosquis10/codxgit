@@ -4,7 +4,13 @@ import { RangeNav } from '@/components/week-nav'
 import { useI18n } from '@/i18n'
 import type { DateRange } from '@/lib/types'
 
-export function DashboardFilter({ range }: { range: DateRange }) {
+export function DashboardFilter({
+  range,
+  to = '/',
+}: {
+  range: DateRange
+  to?: '/' | '/analytics'
+}) {
   const { t } = useI18n()
 
   return (
@@ -18,7 +24,7 @@ export function DashboardFilter({ range }: { range: DateRange }) {
           <p className="text-muted-foreground text-xs">{t.time.filterDescription}</p>
         </div>
       </div>
-      <RangeNav range={range} />
+      <RangeNav range={range} to={to} />
     </div>
   )
 }

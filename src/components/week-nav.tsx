@@ -25,7 +25,7 @@ import { adjacentWeekAnchor, canNavigateNextWeek, getRange, localIsoDate } from 
  * slide its window forward when the user revisits a bookmark or shared URL.
  * The captured date is what keeps the selected period frozen to that day.
  */
-export function RangeNav({ range }: { range: DateRange }) {
+export function RangeNav({ range, to = '/' }: { range: DateRange; to?: '/' | '/analytics' }) {
   const { t } = useI18n()
   const isWeekPreset = range.preset === 'this-week' || range.preset === 'last-week'
   const now = new Date()
@@ -45,10 +45,14 @@ export function RangeNav({ range }: { range: DateRange }) {
         return t.time.presets.thisWeek
       case 'last-week':
         return t.time.presets.lastWeek
+      case 'last-7-days':
+        return t.time.presets.trailing7
       case 'last-15-days':
         return t.time.presets.trailing15
       case 'last-30-days':
         return t.time.presets.trailing30
+      case 'last-90-days':
+        return t.time.presets.trailing90
       case 'one-month':
         return t.time.presets.month1
     }
@@ -62,7 +66,7 @@ export function RangeNav({ range }: { range: DateRange }) {
         return (
           <Button key={preset} asChild variant={active ? 'default' : 'outline'} size="sm">
             <Link
-              to="/"
+              to={to}
               search={(previous) => ({
                 week: todayDate,
                 preset: serializeRangePreset(preset, todayDate),
@@ -80,7 +84,7 @@ export function RangeNav({ range }: { range: DateRange }) {
         <>
           <Button asChild variant="outline" size="sm">
             <Link
-              to="/"
+              to={to}
               search={(previous) => ({
                 week: previousAnchor,
                 preset: previous.preset,
@@ -96,7 +100,7 @@ export function RangeNav({ range }: { range: DateRange }) {
           {canGoNext && nextAnchor ? (
             <Button asChild variant="outline" size="sm">
               <Link
-                to="/"
+                to={to}
                 search={(previous) => ({
                   week: nextAnchor,
                   preset: previous.preset,

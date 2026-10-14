@@ -87,6 +87,14 @@ export function buildDemoInput(range: DateRange): PersonalWorkInput {
     },
   ]
 
+  const blockedIssues: RawBacklogItem[] = [
+    {
+      ...openIssues[0],
+      id: 'demo-issue-333-blocked',
+      labels: ['blocked'],
+    },
+  ]
+
   const closedIssues: RawClosedIssue[] = [
     {
       id: 'demo-closed-1',
@@ -124,6 +132,7 @@ export function buildDemoInput(range: DateRange): PersonalWorkInput {
       title: 'Migrate payment sessions to opaque tokens',
       url: repoUrl(front, 'pull', 565),
       repo: front,
+      createdAt: withinRange(range, 1, 10),
       mergedAt: withinRange(range, 3, 16),
     },
     {
@@ -132,6 +141,7 @@ export function buildDemoInput(range: DateRange): PersonalWorkInput {
       title: 'Add merchant provider registry',
       url: repoUrl(api, 'pull', 901),
       repo: api,
+      createdAt: withinRange(range, 2, 8),
       mergedAt: withinRange(range, 4, 12),
     },
   ]
@@ -199,6 +209,7 @@ export function buildDemoInput(range: DateRange): PersonalWorkInput {
     demo: true,
     openIssues: { status: 'ok', data: openIssues, incomplete: false, note: null },
     openPulls: { status: 'ok', data: openPulls, incomplete: false, note: null },
+    blockedIssues: { status: 'ok', data: blockedIssues, incomplete: false, note: null },
     closedIssues: { status: 'ok', data: closedIssues, incomplete: false, note: null },
     mergedPulls: { status: 'ok', data: mergedPulls, incomplete: false, note: null },
     commits: { status: 'ok', data: commits, incomplete: false, note: null },

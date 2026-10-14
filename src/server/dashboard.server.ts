@@ -98,6 +98,7 @@ function buildInput(
     demo: false,
     openIssues: backlog?.openIssues ?? NOT_COVERED,
     openPulls: backlog?.openPulls ?? NOT_COVERED,
+    blockedIssues: backlog?.blockedIssues ?? NOT_COVERED,
     closedIssues: rangePayload?.closedIssues ?? NOT_COVERED,
     mergedPulls: rangePayload?.mergedPulls ?? NOT_COVERED,
     commits: rangePayload?.commits ?? NOT_COVERED,
