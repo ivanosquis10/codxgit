@@ -1,0 +1,28 @@
+name: Engineering Analytics
+description: Track a user-visible engineering analytics feature or improvement.
+title: "[Feature] Engineering Analytics"
+body:
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Describe the user problem and the outcome this issue should provide.
+      placeholder: Explain why this change is needed.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: List the observable behavior that is in scope and the non-goals.
+      placeholder: Include the affected view, data sources, and explicit non-goals.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: List the observable checks that prove the issue is complete.
+      placeholder: Include behavior, error, coverage, and verification expectations.
+    validations:
+      required: true
