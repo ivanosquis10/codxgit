@@ -55,7 +55,7 @@ Implement a standalone Engineering Analytics view using the existing GitHub CLI,
 - T2 (S1-S3, S5): Build Analytics summary types/logic and route data loading with coverage-safe metrics and deduplicated repository/contribution breakdowns. Done; no commit created because the user explicitly prohibited commits.
 - T3 (S1-S4, S6): Implement the Analytics UI, filters, report generation/copy, navigation, loading and error states using existing components. Done; no commit created because the user explicitly prohibited commits.
 - T4 (S1-S6): Add focused tests and update relevant docs/help text; run typecheck, tests, and build. Done; no commit created because the user explicitly prohibited commits.
-- T5 (S6): Prepare repository issue/PR workflow policy, create the work-unit commit, push the feature branch, and open an unmerged PR targeting `main`. In progress; commit and PR identity pending.
+- T5 (S6): Prepare repository issue/PR workflow policy, create the work-unit commit, push the feature branch, and open an unmerged PR targeting `main`. In progress; work-unit commits `ac89d36` and `1c6f10c` are pushed; PR identity is blocked on an approved issue and required labels.
 
 ## Log
 
@@ -75,3 +75,6 @@ sube los cambios y abre una pr que apunte a main, no merge,
 
 ### L5
 The repository has no issue forms, PR template, `status:approved` label, or `type:*` label. The user authorized preparing the repository policy before continuing delivery.
+
+### L6
+The feature branch `feat/engineering-analytics` was pushed to `origin`. Commits `ac89d36` (`feat(analytics): add engineering analytics view`) and `1c6f10c` (`chore(repo): add issue and pull request templates`) are present. Opening the PR remains blocked because the policy files are not on `main` yet and protected approval/type labels do not exist.
